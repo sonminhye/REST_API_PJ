@@ -5,6 +5,11 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,8 +33,9 @@ public class UserController {
 		return service.findAll();
 	}
 	
+	
 	@GetMapping("/users/{id}")
-	public User retrieveUser(@Valid @PathVariable int id) {
+	public EntityModel retrieveUser(@Valid @PathVariable int id) {
 		
 		User user = service.findOne(id);
 		
@@ -37,7 +43,12 @@ public class UserController {
 			throw new UserNotFoundException(String.format("ID[%s] not found", id));
 		}
 		
-		return service.findOne(id);
+		// hateoas 적용
+		EntityModel<User> model = EntityModel.of(user);
+		WebMvcLinkBuilder linkTo = linkTo(methodOn(this.getClass()).retrieveAllUsers());
+		model.add(linkTo.withRel("all-users"));
+		
+		return model;
 	}
 	
 	@PostMapping("/users")
